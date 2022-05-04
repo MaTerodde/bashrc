@@ -35,14 +35,15 @@ if [ -z "${debian_chroot:-}" ] && [ -r /etc/debian_chroot ]; then
     debian_chroot=$(cat /etc/debian_chroot)
 fi
 
-# set a fancy prompt
+# set a fancy prompt (non-color, unless we know we "want" color)
 case "$TERM" in
     xterm-color|*-256color) color_prompt=yes;;
 esac
 
-# colored prompt
-
-force_color_prompt=yes
+# uncomment for a colored prompt, if the terminal has the capability; turned
+# off by default to not distract the user: the focus in a terminal window
+# should be on the output of commands, not on the prompt
+#force_color_prompt=yes
 
 if [ -n "$force_color_prompt" ]; then
     if [ -x /usr/bin/tput ] && tput setaf 1 >&/dev/null; then
@@ -90,7 +91,22 @@ fi
 alias ll='ls -alF'
 alias la='ls -A'
 alias l='ls -CF'
-alias exp='explorer.exe .'
+
+## other aliases
+# Windows programs
+alias exp='/mnt/c/Windows/explorer.exe .'
+alias code='/mnt/c/Users/terodde/AppData/Local/Programs/Microsoft\ VS\ Code/Code.exe . & disown'
+
+# Directory shortcuts
+alias cdgit='cd ~/git'
+alias cdter='cd ~/git/terraform'
+
+# Terraform
+alias tapply='terraform apply ./plan.tfplan'
+
+# Docker
+alias dkill='echo "stopped:" && docker stop $(docker ps -a -q) && echo "removed:" && docker rm $(docker ps -a -q)'
+function dexec() { docker exec -it $1 bash;}
 
 # Add an "alert" alias for long running commands.  Use like so:
 #   sleep 10; alert
@@ -115,3 +131,11 @@ if ! shopt -oq posix; then
     . /etc/bash_completion
   fi
 fi
+# Start Docker daemon automatically when logging in if not running.
+RUNNING=`ps aux | grep dockerd | grep -v grep`
+if [ -z "$RUNNING" ]; then
+    sudo dockerd > /dev/null 2>&1 &
+    disown
+fi
+
+complete -C /usr/bin/terraform terraform
