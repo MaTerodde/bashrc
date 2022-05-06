@@ -109,7 +109,8 @@ alias dkill='echo "stopped:" && docker stop $(docker ps -a -q) && echo "removed:
 function dexec() { docker exec -it $1 bash;}
 
 # Git
-alias gs='git pull && git status'
+alias gp='git pull'
+alias gs='git status'
 function gc() { git commit -m  "$*" && git push;}
 function ga() { git add  "$1" && git status;}
 
