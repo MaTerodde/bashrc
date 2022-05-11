@@ -113,6 +113,7 @@ alias gp='git pull'
 alias gs='git status'
 function gc() { git commit -m  "$*" && git push;}
 function ga() { git add  "$1" && git status;}
+alias gall='git add -A'
 
 # Add an "alert" alias for long running commands.  Use like so:
 #   sleep 10; alert
@@ -147,4 +148,7 @@ fi
 complete -C /usr/bin/terraform terraform
 
 # Empty Lines at bottom
-PS1='\[\eD\eD\eD\eD\eD\eD\eD\eD\eD\eD\eD\eD\e[A\e[A\e[A\e[A\e[A\e[A\e[A\e[A\e[A\e[A\e]0;\u@\h: \w\a\]${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$'
+PS1='\[\eD\eD\eD\eD\eD\eD\eD\eD\eD\eD\eD\eD\e[A\e[A\e[A\e[A\e[A\e[A\e[A\e[A\e[A\e[A\e]0;\u@\h: \w\a\]${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ '
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
+[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
