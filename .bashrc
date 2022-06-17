@@ -111,6 +111,7 @@ function dg() { docker exec gitlab $*;}
 # Git
 alias gp='git pull'
 alias gs='git status'
+alias br='git branch -l'
 function gc() { git commit -m  "$*" && git push;}
 function ga() { git add  "$1" && git status;}
 function gca() { git add  -A && git commit -m  "$*" && git push;}
