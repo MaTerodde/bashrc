@@ -107,12 +107,13 @@ alias tapply='terraform apply ./plan.tfplan'
 # Docker
 alias dkill='echo "stopped:" && docker stop $(docker ps -a -q) && echo "removed:" && docker rm $(docker ps -a -q)'
 function dexec() { docker exec -it $1 bash;}
-
+function dg() { docker exec gitlab $*;}
 # Git
 alias gp='git pull'
 alias gs='git status'
 function gc() { git commit -m  "$*" && git push;}
 function ga() { git add  "$1" && git status;}
+function gca() { git add  -A && git commit -m  "$*" && git push;}
 alias gall='git add -A'
 
 # Add an "alert" alias for long running commands.  Use like so:
