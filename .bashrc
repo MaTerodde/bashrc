@@ -98,16 +98,12 @@ alias exp='/mnt/c/Windows/explorer.exe .'
 alias code='/mnt/c/Users/terodde/AppData/Local/Programs/Microsoft\ VS\ Code/Code.exe . & disown'
 
 # Directory shortcuts
-alias cdgit='cd ~/git'
-alias cdter='cd ~/git/terraform'
+alias cdgit='cd /mnt/c/git/'
 
-# Terraform
-alias tapply='terraform apply ./plan.tfplan'
 
-# Docker
-alias dkill='echo "stopped:" && docker stop $(docker ps -a -q) && echo "removed:" && docker rm $(docker ps -a -q)'
-function dexec() { docker exec -it $1 bash;}
-function dg() { docker exec gitlab $*;}
+# # Docker
+# alias dkill='echo "stopped:" && docker stop $(docker ps -a -q) && echo "removed:" && docker rm $(docker ps -a -q)'
+# function dexec() { docker exec -it $1 bash;}
 # Git
 alias gp='git pull'
 alias gs='git status'
@@ -140,17 +136,16 @@ if ! shopt -oq posix; then
     . /etc/bash_completion
   fi
 fi
-# Start Docker daemon automatically when logging in if not running.
-RUNNING=`ps aux | grep dockerd | grep -v grep`
-if [ -z "$RUNNING" ]; then
-    sudo dockerd > /dev/null 2>&1 &
-    disown
-fi
+# # Start Docker daemon automatically when logging in if not running.
+# RUNNING=`ps aux | grep dockerd | grep -v grep`
+# if [ -z "$RUNNING" ]; then
+#     sudo dockerd > /dev/null 2>&1 &
+#     disown
+# fi
 
-complete -C /usr/bin/terraform terraform
 
 # Empty Lines at bottom
-PS1='\[\eD\eD\eD\eD\eD\eD\eD\eD\eD\eD\eD\eD\e[A\e[A\e[A\e[A\e[A\e[A\e[A\e[A\e[A\e[A\e]0;\u@\h: \w\a\]${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ '
+#PS1='\[\eD\eD\eD\eD\eD\eD\eD\eD\eD\eD\eD\eD\e[A\e[A\e[A\e[A\e[A\e[A\e[A\e[A\e[A\e[A\e]0;\u@\h: \w\a\]${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ '
 export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
 [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
