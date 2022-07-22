@@ -95,14 +95,16 @@ alias l='ls -CF'
 ## other aliases
 # Windows programs
 alias exp='/mnt/c/Windows/explorer.exe .'
-alias code='/mnt/c/Users/terodde/AppData/Local/Programs/Microsoft\ VS\ Code/Code.exe . & disown'
+alias code='/mnt/c/Users/terodde/AppData/Local/Programs/Microsoft\ VS\ Code/Code.exe . > /dev/null & disown'
 
 # Directory shortcuts
 alias cdgit='cd ~/git'
-alias cdter='cd ~/git/terraform'
+alias cdter='cd ~/git/Terraform'
+alias cdci='cd ~/git/ci-pipeline-config'
 
 # Terraform
-alias tapply='terraform apply ./plan.tfplan'
+alias tapply="terraform apply $(ls -t /home/terodde/*.tfplan| head -n 1)"
+alias tplan='bash /home/terodde/git/Terraform/terraformPlan.sh && mv /home/terodde/*.tfplan /home/terodde/git/Terraform/plan.tfplan && terraform show -no-color plan.tfplan > /home/terodde/git/Terraform/plan.txt'
 
 # Docker
 alias dkill='echo "stopped:" && docker stop $(docker ps -a -q) && echo "removed:" && docker rm $(docker ps -a -q)'
@@ -150,7 +152,7 @@ fi
 complete -C /usr/bin/terraform terraform
 
 # Empty Lines at bottom
-PS1='\[\eD\eD\eD\eD\eD\eD\eD\eD\eD\eD\eD\eD\e[A\e[A\e[A\e[A\e[A\e[A\e[A\e[A\e[A\e[A\e]0;\u@\h: \w\a\]${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ '
+#PS1='\[\eD\eD\eD\eD\eD\eD\eD\eD\eD\eD\eD\eD\e[A\e[A\e[A\e[A\e[A\e[A\e[A\e[A\e[A\e[A\e]0;\u@\h: \w\a\]${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ '
 export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
 [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
