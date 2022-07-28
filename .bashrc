@@ -99,12 +99,13 @@ alias code='/mnt/c/Users/terodde/AppData/Local/Programs/Microsoft\ VS\ Code/Code
 
 # Directory shortcuts
 alias cdgit='cd ~/git'
-alias cdter='cd ~/git/Terraform'
+alias cdter='cd ~/git/Terraform && git pull'
+alias cdter_='cd ~/git/Terraform'
 alias cdci='cd ~/git/ci-pipeline-config'
 
 # Terraform
 alias tapply="terraform apply $(ls -t /home/terodde/*.tfplan| head -n 1)"
-alias tplan='bash /home/terodde/git/Terraform/terraformPlan.sh && mv /home/terodde/*.tfplan /home/terodde/git/Terraform/plan.tfplan && terraform show -no-color plan.tfplan > /home/terodde/git/Terraform/plan.txt'
+alias tplan='bash /home/terodde/git/Terraform/terraformPlan.sh'
 
 # Docker
 alias dkill='echo "stopped:" && docker stop $(docker ps -a -q) && echo "removed:" && docker rm $(docker ps -a -q)'
