@@ -8,48 +8,36 @@ case $- in
       *) return;;
 esac
 
-# don't put duplicate lines or lines starting with space in the history.
-# See bash(1) for more options
-HISTCONTROL=ignoreboth
+######################
+## General Settings ##
+######################
 
-# append to the history file, don't overwrite it
-shopt -s histappend
-
-# for setting history length see HISTSIZE and HISTFILESIZE in bash(1)
+#### History ####
+HISTCONTROL=ignoreboth # don't put duplicate lines or lines starting with space in the history.
 HISTSIZE=1000
 HISTFILESIZE=2000
 
-# check the window size after each command and, if necessary,
-# update the values of LINES and COLUMNS.
-shopt -s checkwinsize
+shopt -s histappend # append to the history file, don't overwrite it
+shopt -s checkwinsize # check the window size after each command and, if necessary, update the values of LINES and COLUMNS.
+shopt -s globstar # match all files and zero or more directories and subdirectories.
 
-# If set, the pattern "**" used in a pathname expansion context will
-# match all files and zero or more directories and subdirectories.
-#shopt -s globstar
 
-# make less more friendly for non-text input files, see lesspipe(1)
-[ -x /usr/bin/lesspipe ] && eval "$(SHELL=/bin/sh lesspipe)"
+[ -x /usr/bin/lesspipe ] && eval "$(SHELL=/bin/sh lesspipe)" # make less more friendly for non-text input files, see lesspipe(1)
 
 # set variable identifying the chroot you work in (used in the prompt below)
 if [ -z "${debian_chroot:-}" ] && [ -r /etc/debian_chroot ]; then
     debian_chroot=$(cat /etc/debian_chroot)
 fi
 
+#### Prompt ####
 # set a fancy prompt (non-color, unless we know we "want" color)
 case "$TERM" in
     xterm-color|*-256color) color_prompt=yes;;
 esac
-
-# uncomment for a colored prompt, if the terminal has the capability; turned
-# off by default to not distract the user: the focus in a terminal window
-# should be on the output of commands, not on the prompt
 force_color_prompt=yes
 
 if [ -n "$force_color_prompt" ]; then
     if [ -x /usr/bin/tput ] && tput setaf 1 >&/dev/null; then
-	# We have color support; assume it's compliant with Ecma-48
-	# (ISO/IEC-6429). (Lack of such support is extremely rare, and such
-	# a case would tend to support setf rather than setaf.)
 	color_prompt=yes
     else
 	color_prompt=
@@ -84,73 +72,38 @@ if [ -x /usr/bin/dircolors ]; then
     alias egrep='egrep --color=auto'
 fi
 
-# colored GCC warnings and errors
-#export GCC_COLORS='error=01;31:warning=01;35:note=01;36:caret=01;32:locus=01:quote=01'
+export GCC_COLORS='error=01;31:warning=01;35:note=01;36:caret=01;32:locus=01:quote=01' # colored GCC warnings and errors
+## Actual Prompt
+check_last_command() {
+    if [ -n "$(history 3 | grep 'export AWS_SESSION_TOKEN=' | grep -v grep)" ]; then
+        echo "yes"
+        export env=$(awsenv)
+    fi
+}
 
-# some more ls aliases
+parse_aws_env() {
+    if [ -n "$env" ]; then
+        echo "[$env]"
+    fi
+}
+parse_git_branch() {
+    git branch 2>/dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/ (\1)/'
+}
+
+# PS1='\[\033[01;31m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\[\033[01;33m\]$(parse_git_branch)\[\033[01;92m\]$(parse_aws_env)\[\033[00m\]\$ '
+PS1='\[\033[01;31m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\[\033[01;33m\]$(parse_git_branch)\[\033[00m\]\$ '
+
+###############
+## Shortcuts ##
+###############
+
+# ls
 alias ll='ls -alF'
 alias la='ls -A'
 alias l='ls -CF'
 
-## other aliases
-alias bashrc='GITLAB_WORKFLOW_INSTANCE_URL=https://gitlab.ernstings-family.com GITLAB_WORKFLOW_TOKEN=Nz6yn1f2194hx_LiWfqr code ~/git/bashrc/.bashrc'
-alias .b='source ~/.bashrc 2>/dev/null'
-function pubkey() { sudo chmod 0600 $1 && ssh-keygen -f $1 -y; }
-function resolvecurl() { curl -H "host:$1" --resolve $1:${3:-'443'}:$2 https://$1 -v; }
-alias vaultUnsealKey='jq -r ".unseal_keys_b64[]" ./cluster-keys.json'
-function loop() {
-    trap "echo Exited!; exit;" SIGINT SIGTERM
-
-    MAX_RETRIES=100
-    i=0
-    # Set the initial return value to failure
-    false
-    while [ $i -lt $MAX_RETRIES ]
-    do
-        i=$(($i+1))
-        $1 $2 $3 $4 $5 $6 $7 $8 $9
-        sleep 100
-    done
-    if [ $i -eq $MAX_RETRIES ]
-    then
-        echo "Hit maximum number of retries, giving up."
-    fi
-}
-
-function testRedisCreds() { # env(without ef prefix), namespace, pod, db_host, db_user, db_pw, container
-    getCfg $1
-    DEBUGPOD=$(kubectl -n $2 debug $3 --image=ubuntu --target=$7 -- sleep 120 | sed 's/Defaulting debug container name to \(.*\)\./\1/')
-    echo $DEBUGPOD
-    kubectl exec -n $2 $3 -c $DEBUGPOD -- \
-    /bin/bash -c "\
-    apt update &&\
-    apt -y install redis-tools ca-certificates &&\
-    redis-cli -h $4 --tls"
-    #AUTH $5 $6
-}
-
-function loopFail() {
-    trap "echo Exited!" SIGINT SIGTERM
-
-    MAX_RETRIES=1000
-    i=0
-    # Set the initial return value to failure
-    false
-    while [ $? -ne 0 -a $i -lt $MAX_RETRIES ]
-    do
-        trap "echo Exited!; exit;" SIGINT SIGTERM
-        i=$(($i+1))
-        $1 $2 $3 $4 $5 $6 $7 $8 $9
-    done
-    if [ $i -eq $MAX_RETRIES ]
-    then
-        echo "Hit maximum number of retries, giving up."
-    fi
-}
-
 # Windows programs
 alias exp='/mnt/c/Windows/explorer.exe .'
-
 
 # Directory shortcuts
 alias cdgit='cd ~/git'
@@ -162,7 +115,6 @@ alias cdps='cd ~/git/platform-services && git pull && code .'
 # Terraform
 alias tapply='terraform apply "plan.tfplan"'
 alias ti='terraform init'
-alias fmt='terraform fmt -recursive && gca fmt'
 function tplan() { terraform init && terraform plan -out plan.tfplan $1 $2 $3 $4 $5 $6;}
 
 # Docker
@@ -184,42 +136,47 @@ alias gall='git add -A'
 function getCfg() {  eksctl utils write-kubeconfig --cluster=eks-ef$1; }
 alias k='kubectl'
 function kd() { kubectl $1 $2 $3 $4 $5 $6 $7 $8 $9 $10 -n development;}
-function kexec() { kubectl exec --stdin --tty "$1" -n $2 -c $3 -- sh;}
+function kexec() { kubectl exec --stdin --tty "$1" -n $2 -- sh;}
 function debugPod() { kubectl -n $1 debug -it $2 --image=ubuntu --target=$3 -- /bin/bash;}
 function debugSA() { export TOKEN=$(kubectl exec $2 -n $1 -- cat /var/run/secrets/eks.amazonaws.com/serviceaccount/token) && kubectl -n $1 debug -it $2 --image=amazon/aws-cli --target=$3 -- aws sts assume-role-with-web-identity --role-arn $4 --role-session-name test --web-identity-token=$TOKEN ;}
-function x() { cat ~/.bashrc | grep "function $1"; cat ~/.bashrc | grep "alias $1";}
-# Add an "alert" alias for long running commands.  Use like so:
-#   sleep 10; alert
-alias alert='notify-send --urgency=low -i "$([ $? = 0 ] && echo terminal || echo error)" "$(history|tail -n1|sed -e '\''s/^\s*[0-9]\+\s*//;s/[;&|]\s*alert$//'\'')"'
-function debugRunner() { RUNNER=$(kubectl get pods -n ${1:-'gitlab-runner-awsudo'} | grep concurrent | cut -d " " -f 1); kubectl exec --stdin --tty "$RUNNER" -n ${1:-'gitlab-runner-awsudo'} -c build -- bash; }
-# Alias definitions.
-# You may want to put all your additions into a separate file like
-# ~/.bash_aliases, instead of adding them here directly.
-# See /usr/share/doc/bash-doc/examples in the bash-doc package.
 
-if [ -f ~/.bash_aliases ]; then
-    . ~/.bash_aliases
-fi
+# loops
+function loop() {
+    trap "echo Exited!; exit;" SIGINT SIGTERM
 
-# enable programmable completion features (you don't need to enable
-# this, if it's already enabled in /etc/bash.bashrc and /etc/profile
-# sources /etc/bash.bashrc).
-if ! shopt -oq posix; then
-  if [ -f /usr/share/bash-completion/bash_completion ]; then
-    . /usr/share/bash-completion/bash_completion
-  elif [ -f /etc/bash_completion ]; then
-    . /etc/bash_completion
-  fi
-fi
-# Start Docker daemon automatically when logging in if not running.
-RUNNING=`ps aux | grep dockerd | grep -v grep`
-if [ -z "$RUNNING" ]; then
-    sudo dockerd > /dev/null 2>&1 &
-    disown
-fi
+    MAX_RETRIES=100
+    i=0
+    # Set the initial return value to failure
+    false
+    while [ $i -lt $MAX_RETRIES ]
+    do
+        i=$(($i+1))
+        $1 $2 $3 $4 $5 $6 $7 $8 $9
+        sleep 100
+    done
+    if [ $i -eq $MAX_RETRIES ]
+    then
+        echo "Hit maximum number of retries, giving up."
+    fi
+}
+function loopFail() {
+    trap "echo Exited!" SIGINT SIGTERM
 
-complete -C /usr/bin/terraform terraform
-
+    MAX_RETRIES=100
+    i=0
+    # Set the initial return value to failure
+    false
+    while [ $? -ne 0 -a $i -lt $MAX_RETRIES ]
+    do
+        trap "echo Exited!; exit;" SIGINT SIGTERM
+        i=$(($i+1))
+        $1 $2 $3 $4 $5 $6 $7 $8 $9
+    done
+    if [ $i -eq $MAX_RETRIES ]
+    then
+        echo "Hit maximum number of retries, giving up."
+    fi
+}
 function retryPlan() {
     success=false
     while [ $success = false ] ;
@@ -235,72 +192,29 @@ function retryPlan() {
         done
 }
 
-parse_git_branch() {
-    git branch 2>/dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/ (\1)/'
-}
-parse_aws_creds() {
-    if env | grep -q AWS
-    then
-        CALLER_ID=$(aws sts get-caller-identity || true)
-        CALLER_ID_ERROR=$(echo $CALLER_ID | grep error)
-        if [ -n "$CALLER_ID_ERROR" ]
-        then
-            echo '-'
-        else
-            CALLER_ID=$(aws sts get-caller-identity | jq -r .Account)
-            case $CALLER_ID in
-            166439682244)
-                echo 'dev/rel'
-                ;;
-            774124932165)
-                echo 'preprod'
-                ;;
-            593977314557)
-                echo 'net'
-                ;;
-            041891899590)
-                echo 'prod'
-                ;;
-            164238261836)
-                echo 'efdev'
-                ;;
-            356704626339)
-                echo 'efpreprod'
-                ;;
-            137664671815)
-                echo 'efnet'
-                ;;
-            305331930007)
-                echo 'efprod'
-                ;;
-            313137676260)
-                echo 'training'
-                ;;
-            esac
-        fi
-    fi
+# other
+alias bashrc='code ~/git/bashrc/.bashrc'
+alias .b='. ~/.bashrc'
+function pubkey() { sudo chmod 0600 $1 && ssh-keygen -f $1 -y; }
+function x() { cat ~/.bashrc | grep "function $1"; cat ~/.bashrc | grep "alias $1";}
+function resolvecurl() { curl -H "host:$1" --resolve $1:${3:-'443'}:$2 https://$1 -v    ; }
+alias vaultUnsealKey='jq -r ".unseal_keys_b64[]" ./cluster-keys.json'
+alias alert='notify-send --urgency=low -i "$([ $? = 0 ] && echo terminal || echo error)" "$(history|tail -n1|sed -e '\''s/^\s*[0-9]\+\s*//;s/[;&|]\s*alert$//'\'')"'
+alias awsenv='aws sts get-caller-identity | jq -r .Account | sed 's/166439682244/dev/g' | sed 's/164238261836/efdev/g' | sed 's/137664671815/efnet/g' | sed 's/356704626339/efpreprod/g' | sed 's/305331930007/efprod/g' | sed 's/593977314557/net/g' | sed 's/774124932165/preprod/g' | sed 's/041891899590/prod/g'' >&/dev/null
 
-}
-check_creds_validity() {
-    CALLER_ID=$(aws sts get-caller-identity)
-    CALLER_ID_ERROR=$(echo $CALLER_ID | grep error)
-    if [ -n "$CALLER_ID_ERROR" ]
-    then
-        echo '01;35'
-    else
-        echo '01;32'
-    fi
-}
+###########
+## Other ##
+###########
+# enable programmable completion features
+if ! shopt -oq posix; then
+  if [ -f /usr/share/bash-completion/bash_completion ]; then
+    . /usr/share/bash-completion/bash_completion
+  elif [ -f /etc/bash_completion ]; then
+    . /etc/bash_completion
+  fi
+fi
 
-PS1='\[\033[01;31m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\[\033[01;33m\]$(parse_git_branch)\[\033[00m\]\$ '
-# PS1='\[\033[01;31m\]\u@\h\[\033[00m\]($(parse_aws_creds)):\[\033[01;34m\]\w\[\033[00m\]\[\033[01;33m\]$(parse_git_branch)\[\033[00m\]\$ '
-# PS1='\[\033[$(check_creds_validity)m\]\u@\h\[\033[00m\]($(parse_aws_creds)):\[\033[01;34m\]\w\[\033[00m\]\[\033[01;33m\]$(parse_git_branch)\[\033[00m\]\$ '
+complete -C /usr/bin/terraform terraform
 
-
-export NVM_DIR="$HOME/.nvm"
-[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
-[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
 export PATH=$PATH:$HOME/bin
-export GITLAB_WORKFLOW_INSTANCE_URL=https://gitlab.ernstings-family.com
-export GITLAB_WORKFLOW_TOKEN=yKM7K95B3sN7rGSVA5Cy
 [[ -f ~/.bash-preexec.sh ]] && source ~/.bash-preexec.sh
