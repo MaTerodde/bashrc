@@ -71,27 +71,23 @@ if [ -x /usr/bin/dircolors ]; then
     alias fgrep='fgrep --color=auto'
     alias egrep='egrep --color=auto'
 fi
-
 export GCC_COLORS='error=01;31:warning=01;35:note=01;36:caret=01;32:locus=01:quote=01' # colored GCC warnings and errors
 ## Actual Prompt
-check_last_command() {
-    if [ -n "$(history 3 | grep 'export AWS_SESSION_TOKEN=' | grep -v grep)" ]; then
-        echo "yes"
-        export env=$(awsenv)
+get_aws_env() {
+    if [ -z "$AWSENV" ]; then
+        export AWSENV=$(awsenv)
+    fi
+    if [ -n "$AWSENV" ]; then
+        echo " [$AWSENV]"
     fi
 }
 
-parse_aws_env() {
-    if [ -n "$env" ]; then
-        echo "[$env]"
-    fi
-}
 parse_git_branch() {
     git branch 2>/dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/ (\1)/'
 }
 
-# PS1='\[\033[01;31m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\[\033[01;33m\]$(parse_git_branch)\[\033[01;92m\]$(parse_aws_env)\[\033[00m\]\$ '
-PS1='\[\033[01;31m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\[\033[01;33m\]$(parse_git_branch)\[\033[00m\]\$ '
+PS1='\[\033[01;31m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\[\033[01;33m\]$(parse_git_branch)\[\033[01;92m\]$(get_aws_env)\[\033[00m\]\$ '
+# PS1='\[\033[01;31m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\[\033[01;33m\]$(parse_git_branch)\[\033[00m\]\$ '
 
 ###############
 ## Shortcuts ##
@@ -133,7 +129,7 @@ function gca() { git add  -A && git commit -m  "$*" && git push; }
 alias gall='git add -A'
 
 # Kubernetes
-function getCfg() {  eksctl utils write-kubeconfig --cluster=eks-ef$1; }
+function getCfg() {  eksctl utils write-kubeconfig --cluster=eks-$1; }
 alias k='kubectl'
 function kd() { kubectl $1 $2 $3 $4 $5 $6 $7 $8 $9 $10 -n development;}
 function kexec() { kubectl exec --stdin --tty "$1" -n $2 -- sh;}
@@ -195,13 +191,20 @@ function retryPlan() {
 # other
 alias bashrc='code ~/git/bashrc/.bashrc'
 alias .b='. ~/.bashrc'
+function .a() {
+    export AWSENV=$(aws sts get-caller-identity | jq -r .Account | sed 's/166439682244/dev/g' | sed 's/164238261836/efdev/g' | sed 's/137664671815/efnet/g' | sed 's/356704626339/efpreprod/g' | sed 's/305331930007/efprod/g' | sed 's/593977314557/net/g' | sed 's/774124932165/preprod/g' | sed 's/041891899590/prod/g')
+    export ENV="$AWSENV"
+    if [ "$ENV" == "efdev" ] || [ "$ENV" == "efpreprod" ] || [ "$ENV" == "efprod" ] || [ "$ENV" == "efnet" ]; then
+        getCfg "$ENV"
+    fi
+}
 function pubkey() { sudo chmod 0600 $1 && ssh-keygen -f $1 -y; }
 function x() { cat ~/.bashrc | grep "function $1"; cat ~/.bashrc | grep "alias $1";}
 function resolvecurl() { curl -H "host:$1" --resolve $1:${3:-'443'}:$2 https://$1 -v    ; }
 alias vaultUnsealKey='jq -r ".unseal_keys_b64[]" ./cluster-keys.json'
 alias alert='notify-send --urgency=low -i "$([ $? = 0 ] && echo terminal || echo error)" "$(history|tail -n1|sed -e '\''s/^\s*[0-9]\+\s*//;s/[;&|]\s*alert$//'\'')"'
 alias awsenv='aws sts get-caller-identity | jq -r .Account | sed 's/166439682244/dev/g' | sed 's/164238261836/efdev/g' | sed 's/137664671815/efnet/g' | sed 's/356704626339/efpreprod/g' | sed 's/305331930007/efprod/g' | sed 's/593977314557/net/g' | sed 's/774124932165/preprod/g' | sed 's/041891899590/prod/g'' >&/dev/null
-
+function vaultRole() { vault read auth/jwt/role/$1; }
 ###########
 ## Other ##
 ###########
