@@ -75,7 +75,7 @@ export GCC_COLORS='error=01;31:warning=01;35:note=01;36:caret=01;32:locus=01:quo
 ## Actual Prompt
 get_aws_env() {
     if [ -z "$AWSENV" ]; then
-        export AWSENV=$(awsenv)
+        export AWSENV=" "
     fi
     if [ -n "$AWSENV" ]; then
         echo " [$AWSENV]"
